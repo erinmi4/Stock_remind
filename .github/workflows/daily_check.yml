@@ -1,0 +1,52 @@
+name: Daily Stock Check & Notify
+
+on:
+  workflow_dispatch: # 允许手动触发
+  schedule:
+    # 使用Cron表达式定义定时任务
+    # 此处设置为每天UTC时间01:00运行 (北京/台北时间上午9:00)
+    - cron: "0 1 * * *"
+
+jobs:
+  run-stock-watcher:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Execute Python script
+        run: python main.py
+        env:
+          # 将GitHub Secrets中的机密信息注入到环境变量中
+          WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
+          WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
+          WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
+          # 支持多个用户OpenID（最多20个）
+          WECHAT_USER_OPENID1: ${{ secrets.WECHAT_USER_OPENID1 }}
+          WECHAT_USER_OPENID2: ${{ secrets.WECHAT_USER_OPENID2 }}
+          WECHAT_USER_OPENID3: ${{ secrets.WECHAT_USER_OPENID3 }}
+          WECHAT_USER_OPENID4: ${{ secrets.WECHAT_USER_OPENID4 }}
+          WECHAT_USER_OPENID5: ${{ secrets.WECHAT_USER_OPENID5 }}
+          WECHAT_USER_OPENID6: ${{ secrets.WECHAT_USER_OPENID6 }}
+          WECHAT_USER_OPENID7: ${{ secrets.WECHAT_USER_OPENID7 }}
+          WECHAT_USER_OPENID8: ${{ secrets.WECHAT_USER_OPENID8 }}
+          WECHAT_USER_OPENID9: ${{ secrets.WECHAT_USER_OPENID9 }}
+          WECHAT_USER_OPENID10: ${{ secrets.WECHAT_USER_OPENID10 }}
+          WECHAT_USER_OPENID11: ${{ secrets.WECHAT_USER_OPENID11 }}
+          WECHAT_USER_OPENID12: ${{ secrets.WECHAT_USER_OPENID12 }}
+          WECHAT_USER_OPENID13: ${{ secrets.WECHAT_USER_OPENID13 }}
+          WECHAT_USER_OPENID14: ${{ secrets.WECHAT_USER_OPENID14 }}
+          WECHAT_USER_OPENID15: ${{ secrets.WECHAT_USER_OPENID15 }}
+          WECHAT_USER_OPENID16: ${{ secrets.WECHAT_USER_OPENID16 }}
+          WECHAT_USER_OPENID17: ${{ secrets.WECHAT_USER_OPENID17 }}
+          WECHAT_USER_OPENID18: ${{ secrets.WECHAT_USER_OPENID18 }}
+          WECHAT_USER_OPENID19: ${{ secrets.WECHAT_USER_OPENID19 }}
+          WECHAT_USER_OPENID20: ${{ secrets.WECHAT_USER_OPENID20 }}
