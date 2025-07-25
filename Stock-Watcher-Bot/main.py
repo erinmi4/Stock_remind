@@ -89,11 +89,13 @@ def main():
     print(f"检测到 {len(user_openids)} 个用户配置")
 
     # 2. 读取 config.json 文件
+    config_path = 'Stock-Watcher-Bot/config.json' if os.path.exists('Stock-Watcher-Bot/config.json') else 'config.json'
     try:
-        with open('config.json', 'r', encoding='utf-8') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             stocks = json.load(f)
     except FileNotFoundError:
         print("错误: config.json 文件未找到！")
+        print(f"查找路径: {config_path}")
         sys.exit(1)
 
     # 3. 初始化报告内容列表

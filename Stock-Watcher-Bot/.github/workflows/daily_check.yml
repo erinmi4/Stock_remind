@@ -20,10 +20,10 @@ jobs:
           python-version: "3.9"
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install -r Stock-Watcher-Bot/requirements.txt
 
       - name: Execute Python script
-        run: python main.py
+        run: python Stock-Watcher-Bot/main.py
         env:
           # 将GitHub Secrets中的机密信息注入到环境变量中
           WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
