@@ -1,0 +1,72 @@
+# 📈 智能股票监控与自动提醒系统
+# 功能描述：
+# 1. 每日上午10:00自动执行股票监控
+# 2. 从config.json读取投资标的和买卖触发价
+# 3. 使用新浪财经API获取实时股价数据
+# 4. 智能决策判断：🟢纪律卖出、🔴价值买入、🟡持仓观察
+# 5. 生成格式化日报并通过微信公众号推送
+
+name: Daily Stock Monitor & Alert System
+
+on:
+  workflow_dispatch: # 允许手动触发测试
+  schedule:
+    # 设置为每天UTC时间02:00运行 (北京时间上午10:00)
+    # 考虑到股市开盘时间和数据更新延迟
+    - cron: "0 2 * * 1-5" # 仅在工作日执行
+
+jobs:
+  stock-monitoring:
+    name: 📊 执行股票监控与提醒
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔄 检出代码仓库
+        uses: actions/checkout@v4
+
+      - name: 🐍 配置Python环境
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          cache: "pip"
+
+      - name: 📦 安装项目依赖
+        run: |
+          pip install --upgrade pip
+          pip install -r Stock-Watcher-Bot/requirements.txt
+
+      - name: 🚀 执行股票监控脚本
+        run: python Stock-Watcher-Bot/main.py
+        env:
+          # 微信公众号配置 - 从GitHub Secrets获取
+          WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
+          WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
+          WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
+
+          # 多用户支持 - 最多20个接收者
+          WECHAT_USER_OPENID1: ${{ secrets.WECHAT_USER_OPENID1 }}
+          WECHAT_USER_OPENID2: ${{ secrets.WECHAT_USER_OPENID2 }}
+          WECHAT_USER_OPENID3: ${{ secrets.WECHAT_USER_OPENID3 }}
+          WECHAT_USER_OPENID4: ${{ secrets.WECHAT_USER_OPENID4 }}
+          WECHAT_USER_OPENID5: ${{ secrets.WECHAT_USER_OPENID5 }}
+          WECHAT_USER_OPENID6: ${{ secrets.WECHAT_USER_OPENID6 }}
+          WECHAT_USER_OPENID7: ${{ secrets.WECHAT_USER_OPENID7 }}
+          WECHAT_USER_OPENID8: ${{ secrets.WECHAT_USER_OPENID8 }}
+          WECHAT_USER_OPENID9: ${{ secrets.WECHAT_USER_OPENID9 }}
+          WECHAT_USER_OPENID10: ${{ secrets.WECHAT_USER_OPENID10 }}
+          WECHAT_USER_OPENID11: ${{ secrets.WECHAT_USER_OPENID11 }}
+          WECHAT_USER_OPENID12: ${{ secrets.WECHAT_USER_OPENID12 }}
+          WECHAT_USER_OPENID13: ${{ secrets.WECHAT_USER_OPENID13 }}
+          WECHAT_USER_OPENID14: ${{ secrets.WECHAT_USER_OPENID14 }}
+          WECHAT_USER_OPENID15: ${{ secrets.WECHAT_USER_OPENID15 }}
+          WECHAT_USER_OPENID16: ${{ secrets.WECHAT_USER_OPENID16 }}
+          WECHAT_USER_OPENID17: ${{ secrets.WECHAT_USER_OPENID17 }}
+          WECHAT_USER_OPENID18: ${{ secrets.WECHAT_USER_OPENID18 }}
+          WECHAT_USER_OPENID19: ${{ secrets.WECHAT_USER_OPENID19 }}
+          WECHAT_USER_OPENID20: ${{ secrets.WECHAT_USER_OPENID20 }}
+
+      - name: 📋 输出执行日志
+        if: always()
+        run: |
+          echo "📅 执行时间：$(date)"
+          echo "🎯 监控任务完成状态：${{ job.status }}"

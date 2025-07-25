@@ -26,28 +26,69 @@ def get_access_token(app_id, app_secret):
         return None
 
 def get_stock_price(stock_code):
-    """从新浪财经API获取股票/基金的实时价格"""
+    """从新浪财经API获取股票/基金的实时价格
+    
+    支持的股票代码格式：
+    - 上海证券：sh + 代码 (如 sh510500)
+    - 深圳证券：sz + 代码 (如 sz159901)
+    - 美股：gb_ + 代码 (如 gb_aapl)
+    """
     url = f"https://hq.sinajs.cn/list={stock_code}"
     headers = {
-        'Referer': 'https://finance.sina.com.cn'
+        'Referer': 'https://finance.sina.com.cn',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
+    
     try:
-        response = requests.get(url, headers=headers, timeout=5)
+        print(f"正在获取 {stock_code} 的价格数据...")
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
-        # 解析返回的数据
-        parts = response.text.split(',')
-        # A股和基金的价格在第3个位置
-        if stock_code.startswith("sh") or stock_code.startswith("sz"):
-            if len(parts) > 3:
-                return float(parts[3])
-        # 美股的价格在第1个位置
+        # 解析新浪财经返回的数据
+        # 格式：var hq_str_sh510500="南方中证500ETF,6.364,6.273,6.364,6.386,6.328,6.363,6.364,16167,102911130.000,..."
+        content = response.text.strip()
+        if not content or '=' not in content:
+            print(f"数据格式异常: {content}")
+            return None
+            
+        # 提取引号内的数据
+        data_start = content.find('"') + 1
+        data_end = content.rfind('"')
+        if data_start <= 0 or data_end <= data_start:
+            print(f"无法解析数据格式: {content}")
+            return None
+            
+        data_str = content[data_start:data_end]
+        parts = data_str.split(',')
+        
+        if len(parts) < 4:
+            print(f"数据长度不足: {len(parts)} 项，内容: {data_str}")
+            return None
+            
+        # 不同市场的价格字段位置
+        if stock_code.startswith(("sh", "sz")):
+            # A股/基金：当前价格在第3个位置（索引3）
+            current_price = parts[3]
+            stock_name = parts[0]
+            print(f"获取到 {stock_name}({stock_code}) 当前价格: {current_price}")
+            return float(current_price)
+            
         elif stock_code.startswith("gb_"):
-            if len(parts) > 1:
-                return float(parts[1])
-        return None
+            # 美股：当前价格在第1个位置（索引1）
+            current_price = parts[1]
+            stock_name = parts[0]
+            print(f"获取到 {stock_name}({stock_code}) 当前价格: {current_price}")
+            return float(current_price)
+            
+        else:
+            print(f"不支持的股票代码格式: {stock_code}")
+            return None
+            
     except (requests.exceptions.RequestException, ValueError, IndexError) as e:
         print(f"获取 {stock_code} 价格失败: {e}")
+        return None
+    except Exception as e:
+        print(f"解析 {stock_code} 数据时出现未知错误: {e}")
         return None
 
 def send_wechat_message(access_token, open_id, template_id, report_data):
@@ -102,56 +143,114 @@ def main():
     report_lines = []
     triggered_alerts = []
 
-    # 4. 遍历所有股票，生成决策报告
+    # 4. 遍历所有股票，生成智能决策报告
     for stock in stocks:
+        print(f"\n处理股票: {stock['name']} ({stock['code']})")
         price = get_stock_price(stock['code'])
-        line = f"**{stock['name']}**: "
+        
+        # 构建报告行
+        line = f"📊 **{stock['name']}** ({stock['code']}): "
+        
         if price is None:
-            decision = "价格获取失败 ❌"
-        elif price > stock['sell_price']:
-            decision = f"🟢 **纪律卖出** (现价:{price} > 目标:{stock['sell_price']})"
-            triggered_alerts.append(decision)
-        elif price < stock['buy_price']:
-            decision = f"🔴 **价值买入** (现价:{price} < 目标:{stock['buy_price']})"
-            triggered_alerts.append(decision)
+            decision = "❌ 价格获取失败"
+            line += decision
         else:
-            decision = f"🟡 持仓观察 (现价:{price})"
-        report_lines.append(line + decision)
+            # 智能决策逻辑
+            if price >= stock['sell_price']:
+                decision = f"🟢 **纪律卖出**\n   现价: ¥{price:.3f} ≥ 卖出价: ¥{stock['sell_price']}"
+                triggered_alerts.append(f"{stock['name']}: 达到卖出条件")
+            elif price <= stock['buy_price']:
+                decision = f"🔴 **价值买入**\n   现价: ¥{price:.3f} ≤ 买入价: ¥{stock['buy_price']}"
+                triggered_alerts.append(f"{stock['name']}: 达到买入条件")
+            else:
+                decision = f"🟡 **持仓观察**\n   现价: ¥{price:.3f} (买入: ¥{stock['buy_price']} ~ 卖出: ¥{stock['sell_price']})"
+            
+            line += decision
+            if stock.get('note'):
+                line += f"\n   💡 {stock['note']}"
+        
+        report_lines.append(line)
+        
+    print(f"\n生成报告完成，触发 {len(triggered_alerts)} 项提醒")
 
-    # 5. 组合成最终的Markdown格式报告
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    final_report_content = "\n".join(report_lines)
+    # 5. 生成完整的智能分析报告
+    today_str = datetime.now().strftime('%Y年%m月%d日')
+    time_str = datetime.now().strftime('%H:%M:%S')
     
-    # 确定报告标题
-    title = f"投资仪表盘日报 {today_str}"
+    # 报告标题根据触发条件动态生成
     if triggered_alerts:
-        title = f"🚨注意！{len(triggered_alerts)}项投资提醒！"
+        title = f"🚨 投资提醒！发现 {len(triggered_alerts)} 项操作机会"
+        alert_summary = "⚠️ **触发提醒**:\n" + "\n".join([f"• {alert}" for alert in triggered_alerts])
+    else:
+        title = f"📈 投资仪表盘日报 - {today_str}"
+        alert_summary = "✅ 当前所有持仓均在正常区间内"
+    
+    # 组装最终报告内容
+    final_report_content = f"""{alert_summary}
+
+📋 **详细监控报告**:
+{chr(10).join(report_lines)}
+
+🕐 报告时间: {today_str} {time_str}
+📱 数据来源: 新浪财经实时行情
+💡 温馨提示: 投资有风险，决策需谨慎"""
+
+    print(f"\n📄 生成最终报告:")
+    print(f"标题: {title}")
+    print(f"内容长度: {len(final_report_content)} 字符")
 
     # 6. 获取access_token
     token = get_access_token(APP_ID, APP_SECRET)
     if not token:
         sys.exit(1)
 
-    # 7. 构建发送给微信的数据结构
+    # 7. 构建微信模板消息数据
     wechat_data = {
         "template_id": TEMPLATE_ID,
-        "url": "http://finance.sina.com.cn/", # 点击消息跳转的链接
+        "url": "https://finance.sina.com.cn/fund/quotes/510500/bc.shtml",  # 点击跳转到南方中证500ETF页面
         "data": {
-            "title": {"value": title, "color": "#FF0000" if triggered_alerts else "#173177"},
-            "content": {"value": final_report_content},
-            "report_time": {"value": datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
-            "tip": {"value": "投资有风险，决策需谨慎。本提醒仅供参考。"}
+            "title": {
+                "value": title, 
+                "color": "#FF6B6B" if triggered_alerts else "#4ECDC4"
+            },
+            "content": {
+                "value": final_report_content,
+                "color": "#333333"
+            },
+            "report_time": {
+                "value": f"{today_str} {time_str}",
+                "color": "#999999"
+            },
+            "tip": {
+                "value": "💼 智能投资监控系统为您服务",
+                "color": "#6C5CE7"
+            }
         }
     }
 
-    # 8. 向所有配置的用户发送微信消息
+    print(f"\n📨 准备向 {len(user_openids)} 位用户发送微信提醒...")
+
+    # 8. 向所有配置的用户发送智能投资报告
+    success_count = 0
     for i, openid in enumerate(user_openids, 1):
-        print(f"正在向用户{i}发送消息...")
+        print(f"📤 向用户 {i}/{len(user_openids)} 发送消息...")
         wechat_data["touser"] = openid
-        send_wechat_message(token, openid, TEMPLATE_ID, wechat_data)
-        # 避免发送过快，添加小延迟
+        
+        try:
+            send_wechat_message(token, openid, TEMPLATE_ID, wechat_data)
+            success_count += 1
+        except Exception as e:
+            print(f"❌ 向用户 {i} 发送消息失败: {e}")
+        
+        # 避免发送过快触发限频，添加延迟
         if i < len(user_openids):
-            time.sleep(0.5)
+            time.sleep(1)
+    
+    print(f"\n✅ 任务完成！成功发送 {success_count}/{len(user_openids)} 条消息")
+    if triggered_alerts:
+        print(f"🔔 本次共触发 {len(triggered_alerts)} 项投资提醒")
+    
+    return success_count > 0
 
 if __name__ == "__main__":
     main()

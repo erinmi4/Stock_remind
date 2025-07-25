@@ -1,23 +1,37 @@
 [
   {
-    "name": "上证50ETF",
+    "name": "南方中证500ETF",
     "code": "sh510500",
-    "sell_price": 6.5,
-    "buy_price": 6.0,
-    "note": "核心持仓，关注大盘情绪"
+    "sell_price": 6.8,
+    "buy_price": 6.2,
+    "note": "中盘股核心配置，跟踪中证500指数"
   },
   {
-    "name": "苹果",
-    "code": "gb_aapl",
-    "sell_price": 220.0,
-    "buy_price": 200.0,
-    "note": "科技股风向标，注意gb_前缀"
+    "name": "上证50ETF",
+    "code": "sh510050",
+    "sell_price": 3.2,
+    "buy_price": 2.9,
+    "note": "大盘蓝筹股代表"
   },
   {
     "name": "创业板ETF",
     "code": "sz159901",
     "sell_price": 2.0,
     "buy_price": 1.8,
-    "note": "关注成长性"
+    "note": "成长股配置，关注创新企业"
+  },
+  {
+    "name": "沪深300ETF",
+    "code": "sh510300",
+    "sell_price": 4.5,
+    "buy_price": 4.1,
+    "note": "A股市场核心指数"
+  },
+  {
+    "name": "科技ETF",
+    "code": "sh515000",
+    "sell_price": 1.6,
+    "buy_price": 1.4,
+    "note": "科技板块配置"
   }
 ]
