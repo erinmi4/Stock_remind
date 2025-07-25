@@ -57,9 +57,12 @@ Stock-Watcher-Bot/
 
 - `WECHAT_APP_ID`: 微信测试号的 appID
 - `WECHAT_APP_SECRET`: 微信测试号的 appsecret
-- `WECHAT_USER_OPENID`: 你的微信 openID
 - `WECHAT_TEMPLATE_ID`: 消息模板 ID
+- `WECHAT_USER_OPENID1`: 第1个用户的微信 openID
+- `WECHAT_USER_OPENID2`: 第2个用户的微信 openID (可选)
+- `...`: 最多支持20个用户 (WECHAT_USER_OPENID1 到 WECHAT_USER_OPENID20)
 
+> 💡 **多用户支持**: 系统支持同时向最多20个用户发送消息，只需配置对应的 WECHAT_USER_OPENID1、WECHAT_USER_OPENID2 等即可。  
 > 💡 **快速配置**: 参考项目中的 `WECHAT_CONFIG.md` 文件获取详细配置步骤，或运行 `python test_config.py` 测试配置是否正确。
 
 ### 5. 自定义监控股票

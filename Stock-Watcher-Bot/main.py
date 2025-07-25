@@ -71,12 +71,22 @@ def main():
     # 1. 从GitHub Actions的环境变量中读取微信配置
     APP_ID = os.environ.get('WECHAT_APP_ID')
     APP_SECRET = os.environ.get('WECHAT_APP_SECRET')
-    USER_OPENID = os.environ.get('WECHAT_USER_OPENID')
     TEMPLATE_ID = os.environ.get('WECHAT_TEMPLATE_ID')
+    
+    # 获取所有配置的OpenID（支持最多20个用户）
+    user_openids = []
+    for i in range(1, 21):  # 支持WECHAT_USER_OPENID1到WECHAT_USER_OPENID20
+        openid = os.environ.get(f'WECHAT_USER_OPENID{i}')
+        if openid:
+            user_openids.append(openid)
 
-    if not all([APP_ID, APP_SECRET, USER_OPENID, TEMPLATE_ID]):
+    if not all([APP_ID, APP_SECRET, TEMPLATE_ID]) or not user_openids:
         print("错误: 微信配置信息不完整，请检查GitHub Secrets。")
+        print("必需配置: WECHAT_APP_ID, WECHAT_APP_SECRET, WECHAT_TEMPLATE_ID")
+        print("至少需要一个: WECHAT_USER_OPENID1, WECHAT_USER_OPENID2, ...")
         sys.exit(1)
+    
+    print(f"检测到 {len(user_openids)} 个用户配置")
 
     # 2. 读取 config.json 文件
     try:
@@ -122,7 +132,6 @@ def main():
 
     # 7. 构建发送给微信的数据结构
     wechat_data = {
-        "touser": USER_OPENID,
         "template_id": TEMPLATE_ID,
         "url": "http://finance.sina.com.cn/", # 点击消息跳转的链接
         "data": {
@@ -133,8 +142,14 @@ def main():
         }
     }
 
-    # 8. 发送微信消息
-    send_wechat_message(token, USER_OPENID, TEMPLATE_ID, wechat_data)
+    # 8. 向所有配置的用户发送微信消息
+    for i, openid in enumerate(user_openids, 1):
+        print(f"正在向用户{i}发送消息...")
+        wechat_data["touser"] = openid
+        send_wechat_message(token, openid, TEMPLATE_ID, wechat_data)
+        # 避免发送过快，添加小延迟
+        if i < len(user_openids):
+            time.sleep(0.5)
 
 if __name__ == "__main__":
     main()
