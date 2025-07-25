@@ -4,8 +4,8 @@ on:
   workflow_dispatch: # 允许手动触发
   schedule:
     # 使用Cron表达式定义定时任务
-    # 此处设置为每天UTC时间01:00运行 (北京/台北时间上午9:00)
-    - cron: "0 1 * * *"
+    # 此处设置为每天UTC时间02:00运行 (北京时间上午10:00)
+    - cron: "0 2 * * *"
 
 jobs:
   run-stock-watcher:
