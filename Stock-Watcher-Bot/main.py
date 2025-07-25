@@ -271,10 +271,19 @@ def main():
     print("🚀 股票监控系统启动")
     print("=" * 60)
     
+    # 显示运行环境信息
+    print(f"🐍 Python版本: {sys.version}")
+    print(f"📁 当前工作目录: {os.getcwd()}")
+    print(f"📂 目录内容: {os.listdir('.')}")
+    
     # 从环境变量获取配置
     APP_ID = os.getenv('WECHAT_APP_ID')
     APP_SECRET = os.getenv('WECHAT_APP_SECRET')
     TEMPLATE_ID = os.getenv('WECHAT_TEMPLATE_ID')
+    
+    print(f"🔑 APP_ID存在: {'是' if APP_ID else '否'}")
+    print(f"🔑 APP_SECRET存在: {'是' if APP_SECRET else '否'}")
+    print(f"🔑 TEMPLATE_ID存在: {'是' if TEMPLATE_ID else '否'}")
     
     if not all([APP_ID, APP_SECRET, TEMPLATE_ID]):
         print("❌ 缺少必要的环境变量配置")
@@ -294,12 +303,25 @@ def main():
     
     print(f"📱 配置了 {len(open_ids)} 个接收用户")
     
-    # 读取股票配置
-    try:
-        with open('config.json', 'r', encoding='utf-8') as f:
-            stock_configs = json.load(f)
-    except Exception as e:
-        print(f"❌ 读取配置文件失败: {e}")
+    # 读取股票配置 - 智能查找config.json文件
+    config_paths = ['config.json', '../config.json', './config.json']
+    stock_configs = None
+    
+    for config_path in config_paths:
+        try:
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    stock_configs = json.load(f)
+                print(f"✅ 成功读取配置文件: {config_path}")
+                break
+        except Exception as e:
+            print(f"⚠️ 尝试读取 {config_path} 失败: {e}")
+            continue
+    
+    if not stock_configs:
+        print("❌ 无法找到或读取config.json配置文件")
+        print("📁 当前工作目录:", os.getcwd())
+        print("📂 目录内容:", os.listdir('.'))
         sys.exit(1)
     
     print(f"📊 监控 {len(stock_configs)} 只股票")
