@@ -4,7 +4,7 @@
     "code": "sh510500",
     "base_price": 6.14,
     "buy_price": 6.0,
-    "sell_rules": [
+    "buy_rules": [
       {
         "trigger_percent_decrease": 5.0,
         "buy_percent_of_capital": 20.0
